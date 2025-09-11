@@ -8,8 +8,18 @@ import LaboratoryDashboard from '@/components/dashboards/laboratory-dashboard';
 import ManufacturerDashboard from '@/components/dashboards/manufacturer-dashboard';
 
 export default function DashboardScreen() {
-  const { userProfile, selectedRole } = useAuth();
-  
+  const auth = useAuth();
+
+  if (!auth) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>Loading auth...</Text>
+      </View>
+    );
+  }
+
+  const { userProfile, selectedRole } = auth;
+
   if (!userProfile || !selectedRole) {
     return (
       <View style={styles.container}>

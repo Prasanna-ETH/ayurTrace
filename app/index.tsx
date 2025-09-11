@@ -1,8 +1,7 @@
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, View, Animated, useWindowDimensions } from 'react-native';
-import { ThemedText } from '@/components/themed-text';
+import { StyleSheet, Text, View, Animated, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Leaf, Sprout } from 'lucide-react-native';
 
@@ -58,8 +57,8 @@ export default function WelcomeScreen() {
             <Sprout size={40} color="rgba(255,255,255,0.8)" style={styles.sproutIcon} />
           </View>
           
-          <ThemedText style={styles.title}>HerbalChain</ThemedText>
-          <ThemedText style={styles.subtitle}>Connecting the Herbal Supply Chain</ThemedText>
+          <Text style={styles.title}>HerbalChain</Text>
+          <Text style={styles.subtitle}>Connecting the Herbal Supply Chain</Text>
           
           <View style={[styles.loadingContainer, { width: width * 0.6 }]}>
             <View style={styles.loadingBar}>
