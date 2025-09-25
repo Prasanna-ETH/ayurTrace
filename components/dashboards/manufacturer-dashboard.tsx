@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Package, QrCode, Eye, Beaker, AlertTriangle, CheckCircle } from 'lucide-react-native';
+import { router } from 'expo-router';
 import { useAuth } from '@/providers/auth-provider';
 import { useData, useApprovedProcessingLots, FinalProduct, ProcessingLot } from '@/providers/data-provider';
 
@@ -155,10 +156,34 @@ export default function ManufacturerDashboard() {
   );
 
   const quickActions = [
-    { icon: Eye, title: 'View Stock', subtitle: 'Available materials', color: '#16a34a' },
-    { icon: Beaker, title: 'Create Formulation', subtitle: 'New product batch', color: '#059669' },
-    { icon: QrCode, title: 'Generate QR', subtitle: 'Traceability codes', color: '#0d9488' },
-    { icon: Package, title: 'View Provenance', subtitle: 'Full supply chain', color: '#0891b2' }
+    { 
+      icon: Eye, 
+      title: 'View Stock', 
+      subtitle: 'Available materials', 
+      color: '#16a34a',
+      onPress: () => router.push('/manufacturer/view-stock')
+    },
+    { 
+      icon: Beaker, 
+      title: 'Create Formulation', 
+      subtitle: 'New product batch', 
+      color: '#059669',
+      onPress: () => router.push('/manufacturer/create-formulation')
+    },
+    { 
+      icon: QrCode, 
+      title: 'Generate QR', 
+      subtitle: 'Traceability codes', 
+      color: '#0d9488',
+      onPress: () => router.push('/manufacturer/generate-qr')
+    },
+    { 
+      icon: Package, 
+      title: 'View Provenance', 
+      subtitle: 'Full supply chain', 
+      color: '#0891b2',
+      onPress: () => console.log('View Provenance - Not implemented yet')
+    }
   ];
 
   const readyBatches = finalProducts.filter(product => product.status === 'active').length;
@@ -256,7 +281,11 @@ export default function ManufacturerDashboard() {
             {quickActions.map((action) => {
               const IconComponent = action.icon;
               return (
-                <TouchableOpacity key={action.title} style={styles.actionCard}>
+                <TouchableOpacity 
+                  key={action.title} 
+                  style={styles.actionCard}
+                  onPress={action.onPress}
+                >
                   <View style={[styles.actionIcon, { backgroundColor: `${action.color}20` }]}>
                     <IconComponent size={24} color={action.color} />
                   </View>

@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FlaskConical, FileText, Building2, QrCode, Download } from 'lucide-react-native';
+import { router } from 'expo-router';
 import { useAuth } from '@/providers/auth-provider';
 import { useData } from '@/providers/data-provider';
 
@@ -71,10 +72,34 @@ export default function LaboratoryDashboard() {
   const { labSamples, processingLots, certificates } = useData();
 
   const quickActions = [
-    { icon: Building2, title: 'View Facilities', subtitle: 'Processing facilities', color: '#16a34a' },
-    { icon: FlaskConical, title: 'Link Sample', subtitle: 'Scan QR code', color: '#059669' },
-    { icon: FileText, title: 'Enter Results', subtitle: 'Input test data', color: '#0d9488' },
-    { icon: QrCode, title: 'Certificates', subtitle: 'View CoAs', color: '#0891b2' }
+    { 
+      icon: Building2, 
+      title: 'View Facilities', 
+      subtitle: 'Processing facilities', 
+      color: '#16a34a',
+      onPress: () => console.log('View Facilities - Not implemented yet')
+    },
+    { 
+      icon: FlaskConical, 
+      title: 'Link Sample', 
+      subtitle: 'Scan QR code', 
+      color: '#059669',
+      onPress: () => router.push('/laboratory/link-sample')
+    },
+    { 
+      icon: FileText, 
+      title: 'Enter Results', 
+      subtitle: 'Input test data', 
+      color: '#0d9488',
+      onPress: () => router.push('/laboratory/enter-results')
+    },
+    { 
+      icon: QrCode, 
+      title: 'Certificates', 
+      subtitle: 'View CoAs', 
+      color: '#0891b2',
+      onPress: () => router.push('/laboratory/view-certificates')
+    }
   ];
 
   const pendingTests = labSamples.filter(sample => sample.status === 'pending').length;
@@ -202,7 +227,11 @@ export default function LaboratoryDashboard() {
             {quickActions.map((action) => {
               const IconComponent = action.icon;
               return (
-                <TouchableOpacity key={action.title} style={styles.actionCard}>
+                <TouchableOpacity 
+                  key={action.title} 
+                  style={styles.actionCard}
+                  onPress={action.onPress}
+                >
                   <View style={[styles.actionIcon, { backgroundColor: `${action.color}20` }]}>
                     <IconComponent size={24} color={action.color} />
                   </View>

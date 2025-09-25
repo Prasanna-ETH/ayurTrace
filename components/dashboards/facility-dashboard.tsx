@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Package, Users, FlaskConical, Eye, Truck, CheckCircle, Thermometer, Droplets } from 'lucide-react-native';
+import { router } from 'expo-router';
 import { useAuth } from '@/providers/auth-provider';
 
 interface ProcessingLot {
@@ -92,12 +93,48 @@ export default function FacilityDashboard() {
   );
 
   const quickActions = [
-    { icon: Users, title: 'View Aggregators', subtitle: 'Collector details', color: '#16a34a' },
-    { icon: CheckCircle, title: 'Receive Batch', subtitle: 'Acknowledge delivery', color: '#059669' },
-    { icon: Thermometer, title: 'Record Processing', subtitle: 'Log processing steps', color: '#0d9488' },
-    { icon: FlaskConical, title: 'Send Lab Sample', subtitle: 'Request testing', color: '#0891b2' },
-    { icon: Eye, title: 'View Stock', subtitle: 'Check inventory', color: '#8b5cf6' },
-    { icon: Package, title: 'View History', subtitle: 'Full provenance', color: '#f59e0b' }
+    { 
+      icon: Users, 
+      title: 'View Aggregators', 
+      subtitle: 'Collector details', 
+      color: '#16a34a',
+      onPress: () => console.log('View Aggregators - Not implemented yet')
+    },
+    { 
+      icon: CheckCircle, 
+      title: 'Receive Batch', 
+      subtitle: 'Acknowledge delivery', 
+      color: '#059669',
+      onPress: () => router.push('/facility/receive-batch')
+    },
+    { 
+      icon: Thermometer, 
+      title: 'Record Processing', 
+      subtitle: 'Log processing steps', 
+      color: '#0d9488',
+      onPress: () => router.push('/facility/record-processing')
+    },
+    { 
+      icon: FlaskConical, 
+      title: 'Send Lab Sample', 
+      subtitle: 'Request testing', 
+      color: '#0891b2',
+      onPress: () => router.push('/facility/send-lab-sample')
+    },
+    { 
+      icon: Eye, 
+      title: 'View Stock', 
+      subtitle: 'Check inventory', 
+      color: '#8b5cf6',
+      onPress: () => router.push('/facility/view-stock')
+    },
+    { 
+      icon: Package, 
+      title: 'View History', 
+      subtitle: 'Full provenance', 
+      color: '#f59e0b',
+      onPress: () => console.log('View History - Not implemented yet')
+    }
   ];
 
   const totalStock = processingLots.reduce((sum, lot) => sum + lot.quantity, 0);
@@ -164,7 +201,11 @@ export default function FacilityDashboard() {
             {quickActions.map((action) => {
               const IconComponent = action.icon;
               return (
-                <TouchableOpacity key={action.title} style={styles.actionCard}>
+                <TouchableOpacity 
+                  key={action.title} 
+                  style={styles.actionCard}
+                  onPress={action.onPress}
+                >
                   <View style={[styles.actionIcon, { backgroundColor: `${action.color}20` }]}>
                     <IconComponent size={20} color={action.color} />
                   </View>

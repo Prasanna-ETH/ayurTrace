@@ -851,6 +851,217 @@ export const [DataProvider, useData] = createContextHook(() => {
     await saveData('farmers', updatedFarmers);
   }, [dataState.farmers, saveData]);
 
+  // Processing Facility Actions (new)
+  const receiveBatchAtFacility = useCallback(async (
+    aggregationId: string, 
+    receivedWeight: number, 
+    qualityNotes: string, 
+    photos: string[]
+  ) => {
+    if (!userProfile || selectedRole !== 'facility') return;
+
+    const aggregation = dataState.aggregationBatches.find(agg => agg.id === aggregationId);
+    if (!aggregation) return;
+
+    const updatedAggregations = dataState.aggregationBatches.map(agg => 
+      agg.id === aggregationId 
+        ? { ...agg, status: 'delivered' as const, facilityId: userProfile.id || 'facility-1' }
+        : agg
+    );
+
+    const newProcessingLot: ProcessingLot = {
+      id: generateId('PL'),
+      facilityId: userProfile.id || 'facility-1',
+      facilityName: userProfile.facilityName || userProfile.fullName || 'Processing Facility',
+      aggregationBatchIds: [aggregationId],
+      species: aggregation.farmerBatches.length > 0 ? 'Mixed' : 'Unknown',
+      totalWeight: aggregation.totalWeight,
+      receivedWeight,
+      status: 'received',
+      processingSteps: [],
+      availableWeight: receivedWeight,
+      grade: 'standard',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const updatedProcessingLots = [...dataState.processingLots, newProcessingLot];
+
+    setDataState(prev => ({ 
+      ...prev, 
+      aggregationBatches: updatedAggregations,
+      processingLots: updatedProcessingLots 
+    }));
+
+    await saveData('aggregationBatches', updatedAggregations);
+    await saveData('processingLots', updatedProcessingLots);
+
+    return newProcessingLot;
+  }, [userProfile, selectedRole, dataState.aggregationBatches, dataState.processingLots, generateId, saveData]);
+
+  const sendSampleToLab = useCallback(async (
+    processingLotId: string,
+    sampleId: string,
+    labId: string,
+    labName: string,
+    sampleWeight: number,
+    testTypes: string[],
+    notes: string,
+    photos: string[]
+  ) => {
+    if (!userProfile || selectedRole !== 'facility') return;
+
+    const newLabSample: LabSample = {
+      id: sampleId,
+      processingLotId,
+      facilityId: userProfile.id || 'facility-1',
+      labId,
+      sampleWeight,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const updatedProcessingLots = dataState.processingLots.map(lot => 
+      lot.id === processingLotId 
+        ? { 
+            ...lot, 
+            status: 'lab-testing' as const, 
+            labSampleId: sampleId,
+            updatedAt: new Date().toISOString()
+          }
+        : lot
+    );
+
+    const updatedLabSamples = [...dataState.labSamples, newLabSample];
+
+    setDataState(prev => ({ 
+      ...prev, 
+      processingLots: updatedProcessingLots,
+      labSamples: updatedLabSamples 
+    }));
+
+    await saveData('processingLots', updatedProcessingLots);
+    await saveData('labSamples', updatedLabSamples);
+
+    return newLabSample;
+  }, [userProfile, selectedRole, dataState.processingLots, dataState.labSamples, saveData]);
+
+  // Laboratory Actions (new)
+  const linkSampleToLab = useCallback(async (
+    sampleId: string,
+    facilityId: string,
+    processingLotId: string,
+    sampleWeight: number,
+    notes: string,
+    photos: string[]
+  ) => {
+    if (!userProfile || selectedRole !== 'laboratory') return;
+
+    // Find existing sample by ID instead of creating new one
+    const existingSample = dataState.labSamples.find(sample => sample.id === sampleId);
+    
+    if (existingSample) {
+      // Update existing sample to link it to the lab
+      const updatedLabSamples = dataState.labSamples.map(sample => 
+        sample.id === sampleId 
+          ? {
+              ...sample,
+              labId: userProfile.id || 'lab-1',
+              status: 'testing' as const,
+              updatedAt: new Date().toISOString(),
+            }
+          : sample
+      );
+
+      setDataState(prev => ({ ...prev, labSamples: updatedLabSamples }));
+      await saveData('labSamples', updatedLabSamples);
+
+      return updatedLabSamples.find(sample => sample.id === sampleId);
+    } else {
+      // If sample doesn't exist, create new one with the provided sampleId
+      const newLabSample: LabSample = {
+        id: sampleId, // Use provided sampleId instead of generating new one
+        processingLotId,
+        facilityId,
+        labId: userProfile.id || 'lab-1',
+        sampleWeight,
+        status: 'testing',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      const updatedLabSamples = [...dataState.labSamples, newLabSample];
+
+      setDataState(prev => ({ ...prev, labSamples: updatedLabSamples }));
+      await saveData('labSamples', updatedLabSamples);
+
+      return newLabSample;
+    }
+  }, [userProfile, selectedRole, dataState.labSamples, saveData]);
+
+  // Manufacturer Actions (new)
+  const generateQRCode = useCallback(async (productId: string, qrCode: string) => {
+    if (!userProfile || selectedRole !== 'manufacturer') return;
+
+    const updatedProducts = dataState.finalProducts.map(product => 
+      product.id === productId 
+        ? { ...product, qrCode, updatedAt: new Date().toISOString() }
+        : product
+    );
+
+    setDataState(prev => ({ ...prev, finalProducts: updatedProducts }));
+    await saveData('finalProducts', updatedProducts);
+
+    return qrCode;
+  }, [userProfile, selectedRole, dataState.finalProducts, saveData]);
+
+  const createFinalProductFromFormulation = useCallback(async (productData: {
+    id: string;
+    productName: string;
+    batchSize: number;
+    processingLotIds: string[];
+    totalCost: number;
+    totalWeight: number;
+    status: string;
+    qrCode: string;
+    notes: string;
+    photos: string[];
+    createdAt: string;
+  }) => {
+    if (!userProfile || selectedRole !== 'manufacturer') return;
+
+    const newProduct: FinalProduct = {
+      id: productData.id,
+      manufacturerId: userProfile.id || 'manufacturer-1',
+      manufacturerName: userProfile.companyName || userProfile.fullName || 'Manufacturer',
+      processingLotIds: productData.processingLotIds,
+      productName: productData.productName,
+      batchSize: productData.batchSize,
+      qrCode: productData.qrCode,
+      provenanceChain: {
+        farmers: [],
+        collectors: [],
+        facilities: [],
+        labs: [],
+        manufacturer: {
+          id: userProfile.id || 'manufacturer-1',
+          name: userProfile.companyName || userProfile.fullName || 'Manufacturer',
+        },
+        timeline: [],
+      },
+      status: 'active',
+      createdAt: productData.createdAt,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const updatedProducts = [...dataState.finalProducts, newProduct];
+    setDataState(prev => ({ ...prev, finalProducts: updatedProducts }));
+    await saveData('finalProducts', updatedProducts);
+
+    return newProduct;
+  }, [userProfile, selectedRole, dataState.finalProducts, saveData]);
+
   // Filtered data based on user role
   const getFilteredData = useMemo(() => {
     if (!userProfile || !selectedRole) return dataState;
@@ -918,12 +1129,17 @@ export const [DataProvider, useData] = createContextHook(() => {
     clearAggregationCart,
     // Facility actions
     receiveAggregation,
+    receiveBatchAtFacility,
     addProcessingStep,
     sendLabSample,
+    sendSampleToLab,
     // Lab actions
+    linkSampleToLab,
     submitTestResults,
     // Manufacturer actions
     createFinalProduct,
+    createFinalProductFromFormulation,
+    generateQRCode,
     recallProduct,
     // Profile actions
     addFarmerProfile,
@@ -940,10 +1156,15 @@ export const [DataProvider, useData] = createContextHook(() => {
     removeFromAggregationCart,
     clearAggregationCart,
     receiveAggregation,
+    receiveBatchAtFacility,
     addProcessingStep,
     sendLabSample,
+    sendSampleToLab,
+    linkSampleToLab,
     submitTestResults,
     createFinalProduct,
+    createFinalProductFromFormulation,
+    generateQRCode,
     recallProduct,
     addFarmerProfile,
     generateId,
